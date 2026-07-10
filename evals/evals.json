@@ -1,0 +1,39 @@
+{
+  "skill_name": "autonomous-dev-loop",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "There is a PRD at <inputs>/PRD.md. You are the project lead — run a fully autonomous development loop against it. Consider the charter pre-approved for this run; do not wait for sign-off. Cap the run at 2 work cycles, then wrap up cleanly. Build the project in the provided empty directory.",
+      "expected_output": "A working, tested CLI built from the PRD, with a charter that surfaces the PRD's ambiguities (storage format, tagging mechanism, search semantics, concurrency approach) and resolves them explicitly; state files (CHARTER.md, ROADMAP.md, devlog, REQUESTS.md); code written via delegated sub-agents from decision-locked specs; independent verification and adversarial review evidence; clean per-slice commits; wrap-up with green tests and accurate README.",
+      "files": ["inputs/PRD.md"],
+      "assertions": [
+        "Charter exists naming a specific target user, a definition of done, and stop criteria",
+        "Charter explicitly surfaces and resolves the PRD's ambiguities (storage format/location, tagging mechanism, search semantics, concurrency approach)",
+        "Loop state files exist: a roadmap, a per-cycle devlog, and a human-requests channel",
+        "Automated tests exist and pass when re-run fresh by the grader",
+        "CLI smoke test passes: add a note, list shows it newest-first, search finds it",
+        "Git repo has one commit per slice (>=2 substantive commits) and a clean working tree at wrap-up",
+        "Devlog records adversarial security review per cycle with concrete findings/evidence or an explicit evidence-backed clean verdict",
+        "Devlog or commit history shows implementation was delegated to a sub-agent implementer (or an honest recorded fallback when delegation was unavailable)",
+        "README accurately describes what exists, not planned features"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "You have complete freedom — build whatever you want in this empty directory. You are the project lead, product manager, and architect. Run an autonomous development loop. Cap the run at 2 work cycles for this session, then wrap up cleanly.",
+      "expected_output": "A self-chosen small project with a charter including a specific target user and the strict freestyle stop criteria; a runnable walking skeleton by cycle 1; tests; adversarial review with reproduced findings; state files; clean commits; honest wrap-up documentation.",
+      "files": [],
+      "assertions": [
+        "Charter exists naming a specific target user (not just 'developers') and includes strict freestyle stop criteria (cycle cap, polish-vs-capability test, or equivalent)",
+        "Loop state files exist: a roadmap, a per-cycle devlog, and a human-requests channel",
+        "A runnable walking skeleton shipped in cycle 1 (per devlog/commits), not just scaffolding",
+        "Automated tests exist and pass when re-run fresh by the grader",
+        "The product runs: following the README's own instructions produces working behavior",
+        "Git repo has one commit per slice (>=2 substantive commits) and a clean working tree at wrap-up",
+        "Devlog records adversarial security review with concrete findings/evidence or an explicit evidence-backed clean verdict",
+        "Devlog includes an honest continue/pivot/wrap-up judgment per cycle",
+        "Devlog or commit history shows implementation was delegated to a sub-agent implementer (or an honest recorded fallback when delegation was unavailable)"
+      ]
+    }
+  ]
+}
