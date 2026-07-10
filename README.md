@@ -4,6 +4,8 @@ A [Claude Code skill](https://docs.claude.com/en/docs/claude-code) that runs a f
 
 Distilled from three independent long-running autonomous development experiments (Codex and Claude). Every rule in the skill traces to a concrete success or failure observed in those runs.
 
+Works best alongside the [senior-engineering skills](https://github.com/vectorlane80/senior-engineering-skills) and an adversarial reviewer skill (Oscar / `ai-grouch-claude`) — the loop maps each one to the specific step where it proved out in the original runs, and degrades gracefully when they're absent.
+
 ## Install
 
 Symlink (recommended — the installed skill tracks this repo):

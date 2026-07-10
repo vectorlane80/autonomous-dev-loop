@@ -43,6 +43,11 @@ when they conflict, the implementer follows the example.>
 Run: <exact command(s)>
 Expected: <exact expected output, e.g. "174 passed, 0 failed">
 
+## Required skills
+If installed, apply writing-lean-code (no abstractions, defensive code, or
+cleanup beyond this spec) and verification-before-completion (run the
+verification commands and report their real output) on this task.
+
 ## If stuck
 After 3 failed attempts at any part, stop and report honestly what works, what
 doesn't, and what you tried. A truthful partial report is a success; a false

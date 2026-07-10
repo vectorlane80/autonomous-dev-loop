@@ -17,6 +17,19 @@ The core thesis, distilled from multiple long autonomous runs: **cheap models ca
 
 Why the split is non-negotiable: across every experiment run, cheap models were excellent implementers of precise specs and poor architects. Every security-sensitive decision left to an implementer produced slop. And the single most common failure mode — observed in all runs — was **implementers reporting false success**: "all green" on red suites, self-inflicted regressions labeled "pre-existing and unrelated." Never advance the loop on a sub-agent's word.
 
+## Companion skills
+
+The [senior-engineering skill set](https://github.com/vectorlane80/senior-engineering-skills) (`understanding-before-coding`, `writing-lean-code`, `scientific-debugging`, `verification-before-completion`, `reasoning-traps`) plus `ai-grouch-claude` were load-bearing in the original experiment runs. If they are installed, invoke each at the loop step named below — that placement comes from where they actually paid off (and failed to) in those runs. If they are not installed, the same disciplines are embedded in this skill's steps; follow the steps as written.
+
+| Skill | Where in the loop | Why there |
+|---|---|---|
+| `understanding-before-coding` | Step 3, before writing any spec | Grounds the slice in the code that exists, not a pattern-matched memory of similar projects |
+| `writing-lean-code` | Delegation contract + your diff review in step 5 | Reduced implementer slop, but tight specs and review are the real mitigation |
+| `verification-before-completion` | Step 5, and required of the implementer | The single most important discipline in the runs — and the one sub-agents most often failed to genuinely honor, which is why it never substitutes for your own re-run |
+| `reasoning-traps` | Step 2 and every "declare done" or "agree with a diagnosis" moment | Would have caught the vacuous-test error a lead committed; the lead is not immune |
+| `scientific-debugging` | Lead only, whenever behavior is wrong | Highest value when a sub-agent failed; delegating debugging collapsed into guessing every time |
+| `ai-grouch-claude` (Oscar) | Step 6 | The review workhorse — see [references/review.md](references/review.md) |
+
 ## Phase 0 — Intake
 
 Determine the mode from what the user gave you:
@@ -29,8 +42,9 @@ Determine the mode from what the user gave you:
 
 1. **Repo preflight.** `git init` if needed. Verify git author identity is set now (past runs hit wrong auto-detected identities and GitHub email-privacy rejections — find out before mid-cycle). No remote is fine; note it in REQUESTS.md as optional.
 2. **Create the state files** from [references/templates.md](references/templates.md): `CHARTER.md`, `ROADMAP.md`, `docs/DEVLOG.md`, `REQUESTS.md`, and a project `CLAUDE.md` that constrains the implementer. These files are the loop's memory — every cycle must be resumable cold, from files alone, by a session with zero conversational history. Commit them, and if a remote exists, push this commit as the connectivity probe — a push can't be tested before the first commit exists.
-3. **Pick the stack and test runner**, favoring minimal dependencies (zero-dependency projects were the smoothest runs). Set up CI if a remote exists.
-4. **Ship a walking skeleton in cycle 1**: the smallest end-to-end slice that a user could actually run, with tests. Usable from minute one beats scaffolding.
+3. **Check which companion skills are installed** (see the table above). Missing ones are worth a non-blocking REQUESTS.md item pointing at the install source — but never block on them; the loop runs on its embedded disciplines either way.
+4. **Pick the stack and test runner**, favoring minimal dependencies (zero-dependency projects were the smoothest runs). Set up CI if a remote exists.
+5. **Ship a walking skeleton in cycle 1**: the smallest end-to-end slice that a user could actually run, with tests. Usable from minute one beats scaffolding.
 
 ## Phase 2 — The cycle
 
@@ -45,13 +59,13 @@ Environment hygiene first: kill stale dev servers, clear stale build artifacts, 
 Re-read `CHARTER.md` and `ROADMAP.md`. Answer honestly: continue, pivot, pause (blocked on REQUESTS.md), or wrap up. Check the stop criteria. One guard is non-negotiable: **any roadmap item still unresolved after 3 cycles forces a pivot/pause/re-scope decision, not a fourth attempt** — the loop's discipline can otherwise mask an infinite grind on an unachievable slice with honest-looking devlog entries. Record the decision in the devlog and surface it in REQUESTS.md. Every 5 cycles — or after completing any milestone — do the deep version: *Who benefits from this now? What real workflow does it support? Is the next slice product work or just polish? Would a human fund another cycle?* Write the answer in the devlog. Hitting "wrap up" is a success outcome, not a failure.
 
 ### 3. Pick one slice and lock the decisions
-Take the top roadmap item and size it to one coherent, shippable increment — one commit. Then write the spec with **every design decision already made**: data formats, algorithms, error behavior, security choices (hashing parameters, what gets stored, trust boundaries, file-creation semantics like `O_EXCL` vs check-then-open). Spec precision is the main quality lever; quality tracked it almost linearly in past runs. Anything security-sensitive is decided here, by you, never by the implementer.
+Take the top roadmap item and size it to one coherent, shippable increment — one commit. Investigate before you spec (`understanding-before-coding` if installed): read the code the slice touches so the spec describes this codebase, not a remembered one. Then write the spec with **every design decision already made**: data formats, algorithms, error behavior, security choices (hashing parameters, what gets stored, trust boundaries, file-creation semantics like `O_EXCL` vs check-then-open). Spec precision is the main quality lever; quality tracked it almost linearly in past runs. Anything security-sensitive is decided here, by you, never by the implementer.
 
 ### 4. Delegate
 Send the spec to the implementer using the delegation contract in [references/delegation.md](references/delegation.md) — exact file ownership, do-NOT list, required tests, verification commands with expected outputs, honest-failure escape hatch, required report format. Prefer synchronous dispatch (the report returns as the tool result); if you are yourself running as a sub-agent, synchronous is the only reliable option — see the delegation reference.
 
 ### 5. Independently verify — never accept the report
-When the implementer returns, re-run the full suite yourself, read the diff line by line (security-critical code especially), run a manual smoke test of the new user-facing behavior, and run `git diff --check`. Treat "all tests pass" as false until you have reproduced it. This was the highest-ROI behavior across all runs. Also apply skepticism to yourself: at "declare done" moments the lead has credited vacuous tests as proof — reread a test and ask what failure it could actually catch before citing it.
+When the implementer returns, re-run the full suite yourself, read the diff line by line (security-critical code especially), run a manual smoke test of the new user-facing behavior, and run `git diff --check`. Treat "all tests pass" as false until you have reproduced it. This was the highest-ROI behavior across all runs. Also apply skepticism to yourself (`reasoning-traps` if installed): at "declare done" moments the lead has credited vacuous tests as proof — reread a test and ask what failure it could actually catch before citing it. And when verification turns up wrong behavior, diagnose it yourself before speccing any fix (`scientific-debugging` if installed) — form a hypothesis against a live reproduction; never delegate the diagnosis.
 
 ### 6. Adversarial review
 Run the reviewer per [references/review.md](references/review.md) on every code-touching slice. The evidence rule is absolute: a finding counts only with a live reproduction (the exact request, byte sequence, or crafted input that breaks it), and you reproduce the exploit yourself before writing the fix spec. Past reviews run this way caught a real ship-blocking defect *every single cycle*. Every 5 cycles and before any release, run a **whole-codebase audit** instead of a diff review — diff-scoped reviews systematically miss absence-class defects (things wrong everywhere equally, like no file I/O specifying an encoding).
