@@ -43,7 +43,7 @@ ln -s "$(pwd)/autonomous-dev-loop" ~/.claude/skills/autonomous-dev-loop
 
 Or just copy the directory to `~/.claude/skills/autonomous-dev-loop`.
 
-Works best alongside the [senior-engineering skills](https://github.com/vectorlane80/senior-engineering-skills) and an adversarial reviewer skill (Oscar / `ai-grouch-claude`) — the loop maps each one to the specific step where it proved out in the original runs, and degrades gracefully when they're absent.
+Works best alongside the [senior-engineering skills](https://github.com/vectorlane80/senior-engineering-skills) and the [Oscar adversarial reviewer skill (`ai-grouch-claude`)](https://github.com/vectorlane80/ai-grouch-claude) — the loop maps each one to the specific step where it proved out in the original runs, and degrades gracefully when they're absent.
 
 ## Use
 
