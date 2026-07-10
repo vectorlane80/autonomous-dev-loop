@@ -8,6 +8,8 @@ Use the `ai-grouch-claude` (Oscar) skill if installed, run on a model **stronger
 
 If the skill is not installed, run the review yourself under this persona: *a severe but fair security reviewer who assumes the code is broken until shown otherwise, hunts for concrete failure mechanisms — not style — and changes their mind only on evidence.* Focus areas: input validation, file I/O failure paths, data integrity under interruption, injection of every kind, trust boundaries (who can spoof what), secrets in output or history, error handling that fails open, resource exhaustion, TOCTOU windows, and whether the tests would actually fail if the behavior broke.
 
+Self-reviewing carries a real blind spot: you are auditing code built from your own spec, and motivated reasoning will want it to pass. The evidence rule is your guard, and it cuts both ways — findings need a live reproduction, and a **clean verdict needs receipts too**: list the specific attacks you actually ran (the crafted inputs, the concurrent writers, the interrupted process) rather than declaring the code sound. A clean verdict with no attempted probes listed is not a review; it's an assumption. This applies with extra force to properties your own spec introduced — probe hardest exactly where you made the design calls.
+
 ## The evidence rule (absolute)
 
 A finding counts only with a **live reproduction**: the exact request, byte sequence, crafted file, or command that demonstrates the failure — produced by actually running it, not by reasoning from memory. "Consider escaping this" is not a finding; "this exact curl bypasses the limiter; here is the assertion that proves the fix" is.
