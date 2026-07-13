@@ -48,7 +48,9 @@ Determine the mode from what the user gave you:
 
 ## Phase 2 — The cycle
 
-Run cycles back to back: when one lands, start the next. The loop is event-driven — a cycle ends when its slice is landed and verified, not when a timer fires. (If the user asked for a paced cadence, schedule wake-ups between cycles instead; the wake-up prompt must say only "run the next cycle per the roadmap" — a past run hardcoded the next task into its recurring prompt and it was stale and wrong from cycle 2 onward.)
+Run cycles back to back: when one lands, start the next. The loop is event-driven — a cycle ends when its slice is landed and verified, not when a timer fires.
+
+**Set a scheduled safety net before cycle 1.** Continuous execution has a single point of failure: hitting the session's usage limit kills the entire run mid-cycle, silently. If the harness supports scheduled wake-ups (`/loop`, cron, scheduled tasks), create one firing every hour whose prompt carries **zero task content** — only: *"Resume the autonomous dev loop in `<repo>`: run the next cycle per ROADMAP.md. If the run has wrapped up, do nothing."* (Task-free because a past run hardcoded the next task into its recurring prompt and it was stale and wrong from cycle 2 onward.) In normal operation each firing finds the work already current and costs almost nothing; after a usage-limit reset, it is what brings the run back from the dead — cold, from the state files alone. **Cancel it at wrap-up, at a budget pause, and whenever the loop exits on a blocking need** — an orphaned safety net that outlives its run is a token leak. If the user asked for a paced cadence instead of continuous execution, this same scheduled loop *is* the cadence.
 
 Every cycle, in order:
 
@@ -56,7 +58,7 @@ Every cycle, in order:
 Environment hygiene first: kill stale dev servers, clear stale build artifacts, confirm the working tree matches HEAD, run the full test suite. Past runs lost hours to a stale `.next` cache faking a typecheck failure and a zombie server on the test port serving old code — confirm the thing you're about to test is the thing that exists on disk. If the tree is dirty or tests are red, you are in **recovery**, not a new cycle: diff the tree against HEAD to learn what a dead sub-agent actually landed before deciding anything (protocol in [references/delegation.md](references/delegation.md)).
 
 ### 2. Decide whether this cycle should happen
-Re-read `CHARTER.md` and `ROADMAP.md`. Answer honestly: continue, pivot, pause (blocked on REQUESTS.md), or wrap up. Check the stop criteria. One guard is non-negotiable: **any roadmap item still unresolved after 3 cycles forces a pivot/pause/re-scope decision, not a fourth attempt** — the loop's discipline can otherwise mask an infinite grind on an unachievable slice with honest-looking devlog entries. Record the decision in the devlog and surface it in REQUESTS.md. Every 5 cycles — or after completing any milestone — do the deep version: *Who benefits from this now? What real workflow does it support? Is the next slice product work or just polish? Would a human fund another cycle?* Write the answer in the devlog. Hitting "wrap up" is a success outcome, not a failure.
+Re-read `CHARTER.md` and `ROADMAP.md`. Answer honestly: continue, pivot, pause (blocked on REQUESTS.md), or wrap up. Check the stop criteria and the run budget. One guard is non-negotiable: **any roadmap item still unresolved after 3 cycles forces a pivot/pause/re-scope decision, not a fourth attempt** — the loop's discipline can otherwise mask an infinite grind on an unachievable slice with honest-looking devlog entries. Record the decision in the devlog and surface it in REQUESTS.md. Every 5 cycles — or after completing any milestone — do the deep version: *Who benefits from this now? What real workflow does it support? Is the next slice product work or just polish? Would a human fund another cycle?* Write the answer in the devlog. Hitting "wrap up" is a success outcome, not a failure.
 
 ### 3. Pick one slice and lock the decisions
 Take the top roadmap item and size it to one coherent, shippable increment — one commit. Investigate before you spec (`understanding-before-coding` if installed): read the code the slice touches so the spec describes this codebase, not a remembered one. Then write the spec with **every design decision already made**: data formats, algorithms, error behavior, security choices (hashing parameters, what gets stored, trust boundaries, file-creation semantics like `O_EXCL` vs check-then-open). Spec precision is the main quality lever; quality tracked it almost linearly in past runs. Anything security-sensitive is decided here, by you, never by the implementer.
@@ -75,15 +77,21 @@ Findings go back to the implementer as new decision-locked specs; re-verify each
 
 Then start the next cycle at step 1.
 
+## Run budget (guardrail)
+
+A charter without a budget is an unbounded spend authorization. If the user set limits at invocation ("no more than N cycles/hours"), those go in the charter verbatim. Otherwise write the defaults in: **freestyle 10 cycles; directed 25 cycles or the milestone list, whichever comes first.** Hitting the budget is a pause, not a failure: land whatever is in flight, leave the tree clean and pushed, cancel the scheduled safety net, and ask for renewal — one REQUESTS.md item and one final chat message stating what was accomplished, what remains, and that another budget's worth of cycles needs an explicit go-ahead. Renewal makes continuation opt-in; without this brake, a healthy loop runs away precisely *because* it is healthy. External spending caps are still worth setting — the budget is the in-loop brake, not the only one.
+
 ## Interacting with the human
 
-`REQUESTS.md` is the only channel. Write checkbox items for anything you need (a prerequisite installed, an API key, a judgment call you'd *like* input on but can proceed without). Check it each cycle for responses. Block on it only when genuinely unable to proceed — then pause the loop and say so in your status output. Never block on approval for normal work; the charter (and its one-time sign-off in directed mode) is your authorization.
+`REQUESTS.md` is the only channel. Write checkbox items for anything you need (a prerequisite installed, an API key, a judgment call you'd *like* input on but can proceed without). Check it each cycle for responses. Never block on approval for normal work; the charter (and its one-time sign-off in directed mode) is your authorization.
+
+Block only when genuinely unable to proceed — and **blocking means exiting, not idling.** When a human action is required: mark the item blocking in REQUESTS.md, cancel the scheduled safety-net loop, and end with a single chat message stating exactly what you need, exactly how to provide it, and how to resume the run (check the box, re-invoke the skill — the state files make cold resumption safe). Do not keep waking up to report "still blocked"; a loop that spends tokens every hour announcing its own blockage is strictly worse than no loop.
 
 At the end of each cycle, emit a concise heartbeat in chat: what shipped, test count, review outcome, what's next. A few lines, not a report.
 
 ## Wrap-up mode
 
-When stop criteria fire, the definition of done is met, or the user ends the run: get tests green, tree clean, everything pushed; make the README fully describe what exists (not what was planned); write a final devlog entry covering what was built, how the loop performed, and why it stopped. Leave the repo understandable to a future reader who has never seen this conversation.
+When stop criteria fire, the budget exhausts, the definition of done is met, or the user ends the run: get tests green, tree clean, everything pushed; **cancel the scheduled safety-net loop**; make the README fully describe what exists (not what was planned); write a final devlog entry covering what was built, how the loop performed, and why it stopped. Leave the repo understandable to a future reader who has never seen this conversation.
 
 ## Cost policy
 

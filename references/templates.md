@@ -28,6 +28,13 @@ Ordered, each sized so its slices fit single cycles.
 The observable state at which the loop enters wrap-up mode. In directed mode, derive
 this from the PRD. In freestyle mode, write it before cycle 1 and keep it modest.
 
+## Run budget
+The maximum cycles this run may consume before pausing for renewal. Use the
+user's limits verbatim if they gave any at invocation; otherwise the defaults:
+freestyle 10 cycles, directed 25 cycles or the milestone list, whichever comes
+first. On exhaustion: land in-flight work, clean tree, cancel any scheduled
+loop, request renewal in REQUESTS.md and chat. Continuation is opt-in.
+
 ## Stop criteria
 Conditions that force wrap-up (or a pivot decision) even if the definition of done
 is not met. Checked every cycle, deeply every 5 cycles.
@@ -97,7 +104,7 @@ The only human channel. Checkbox protocol: you write unchecked items; the human 
 - [ ] <date, cycle N — blocking|non-blocking> <what is needed and why, exactly how to provide it>
 ```
 
-Only block the loop on items marked blocking, and only mark blocking what you truly cannot proceed without.
+Only block the loop on items marked blocking, and only mark blocking what you truly cannot proceed without. A blocking item **exits the loop entirely** — scheduled safety net canceled, one clear final message stating the need and how to resume. The loop never idles awake waiting on a human; resumption is the human checking the box and re-invoking the skill.
 
 ## CLAUDE.md (project root — the implementer's standing constraints)
 
