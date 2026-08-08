@@ -4,6 +4,27 @@
 
 The implementer is a cheap model. It executes precise specs excellently and fills gaps poorly — under-specification in past runs produced defensive slop (an unreachable custom sanitizer duplicating a library), wrong design calls, and guessing. Meanwhile its self-reports cannot be trusted: implementers repeatedly declared "all green" on red suites and labeled self-inflicted regressions "pre-existing and unrelated." The contract below exists to keep the implementer inside its competence zone and to make its output cheap to verify.
 
+## Choosing an implementer
+
+If more than one coding CLI or model tier is available, a few things hold up in practice. Measure them on your own setup rather than trusting any list — specifics change with every model release, but the shape has been stable:
+
+- **Prefer a dedicated coding CLI at its default or lowest reasoning effort.** On decision-locked implementation — design already settled, spec precise — raising reasoning effort mostly buys latency. The work is transcription, not invention.
+- **Choose the quota-exhaustion fallback in advance.** A long run will hit a limit mid-cycle. Deciding what to switch to while the run is stalled wastes the window; make it a routing rule, not a judgment call, and prefer a fallback drawing on a different account or billing pool.
+- **Do not use the same tool to implement and to review.** The two reward different behaviour, and the strongest implementer is not reliably the strongest reviewer — in one comparison it was the weakest. Cross-tool review also catches blind spots a model checking its own work will not.
+- **Exclude any model that over-reports success, however cheap.** A model that says "all tests pass" on a red suite is not a cheap implementer; it is a source of silent corruption, and no price makes that worth it.
+
+Which implementer you pick matters far less than the verification rule below, which is what makes a wrong choice survivable.
+
+## Splitting the lead: spec author vs loop driver
+
+The lead's job splits cleanly in two: authoring the delegation spec, and driving the loop (dispatching, verifying, re-dispatching). Different models can hold each, and on a full project build the split scored the same as one strong model doing both — while costing less, because the expensive model is invoked once per cycle instead of staying resident through all the repetitive work.
+
+Give the spec author the state files as context each cycle — the brief, `CHARTER.md`, `ROADMAP.md`, the previous cycle's outcome, the current file list, and the one slice you want specced — then dispatch what it returns verbatim. Because the state files carry the context, no message bus or agent-to-agent channel is needed: the repo *is* the handoff, and a plain one-shot invocation per cycle is enough. Feed the previous cycle's outcome forward; a stateless spec service with no history slices noticeably worse.
+
+**The reason to prefer the split is that it checks the spec author.** In one run a spec asserted a specific pseudo-random generator output as ground truth. The value was wrong, and it was about to become load-bearing in a test. The driving model ran it before dispatch, caught it, and corrected the one line. A lead writing its own specs dispatches its own hallucinated constants unchallenged.
+
+So verify any concrete constant a spec asserts — an RNG output, an arithmetic result, an API signature — before it reaches the implementer. Correct only that, log every such deviation, and never silently rewrite a design decision. A factual correction and a redesign are different acts.
+
 ## Dispatching the implementer
 
 Prefer a synchronous sub-agent call — the report comes back as the tool result and the loop continues in the same turn, with nothing to track. If you dispatch in the background instead, that also works *when you are the top-level session*: the harness re-invokes you when the child finishes, so end the turn cleanly rather than polling.
@@ -47,6 +68,10 @@ Expected: <exact expected output, e.g. "174 passed, 0 failed">
 If installed, apply writing-lean-code (no abstractions, defensive code, or
 cleanup beyond this spec) and verification-before-completion (run the
 verification commands and report their real output) on this task.
+[An implementer on another vendor's CLI cannot load these skills — for those,
+inline the rules instead: no abstractions/defensive code/cleanup beyond this
+spec; and climb the whole verification ladder — imports, provided tests pass,
+then exercise what the spec describes that no provided test covers.]
 
 ## If stuck
 After 3 failed attempts at any part, stop and report honestly what works, what
@@ -60,6 +85,16 @@ doesn't, and what you tried. A truthful partial report is a success; a false
 ```
 
 Good delegation tasks are concrete implementation patches: a single slice's code plus tests, focused test additions, doc updates tied to specific behavior. Never delegate product strategy, architecture, security decisions, or debugging — debugging in particular collapsed into guessing when delegated; the lead root-causes (scientific-debugging style, against a live reproduction) and then delegates the *fix* as a normal decision-locked spec.
+
+## The lead re-runs the tests. Always.
+
+The implementer's report is a claim, not evidence. Across a few hundred measured delegations, roughly one in twelve reported success on work that failed a suite it had not seen — and the rate varied enormously by model, from never to most of the time. The most confident report enumerated the exact spec clauses it had skipped and declared them "Verified"; another opened "Perfect! All tests pass."
+
+So, every cycle, before accepting a slice:
+
+1. **Run the verification command yourself.** Do not trust the implementer's exit code or its quoted output — an agent inside the workspace can edit the test file, add a `conftest.py` that rewrites outcomes, or simply print success.
+2. **Keep the acceptance check out of the implementer's reach** where you can. What it can see, it will code to — which is why a passing suite it was handed proves less than it looks.
+3. **Treat a confident checklist as a smell**, not reassurance. Calibrated reports ("tests pass; I could not exercise X") were reliably honest; triumphant ones were where the false completions lived.
 
 ## Implementer lifecycle
 
