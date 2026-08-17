@@ -28,3 +28,33 @@ And the force-multiplier from past runs: **the lead reproduces the exploit perso
 2. Reproduced → write a decision-locked fix spec including the reproduction as a required regression test; delegate normally.
 3. Independently verify the fix: re-run the reproduction (must now fail to exploit) and the full suite.
 4. Log every finding, its reproduction, and its resolution in the devlog. **Feed lessons forward**: each finding class becomes a standing probe in future reviews ("probe TOCTOU windows", "check every export's file mode"). Past runs' reviews got measurably smarter over cycles this way — but only because the lessons were written down.
+
+## Nothing gets left behind — hard rule, no severity exception
+
+Every finding a review produces — **blocking, major, minor, and nit alike** —
+must reach an explicit, recorded disposition before the slice is considered
+landed. There are exactly three legitimate dispositions:
+
+- **fixed** — landed in this slice, verified per step 3 above.
+- **consciously deferred** — a real issue, correctly out of scope for this
+  slice (e.g. it spans other files/games this spec doesn't own, or it's
+  pre-existing and shared beyond this change). Deferring requires a written
+  reason and a concrete next step: a `ROADMAP.md`/`REQUESTS.md` follow-up
+  item, not a devlog mention that quietly evaporates once the cycle ends.
+- **rejected** — not actually a defect. Requires the reasoning or reproduction
+  attempt that disproves it, same evidence bar as accepting a finding.
+
+**"Nit" is not a fourth disposition and not an exemption.** A finding labeled
+nit or minor still needs one of the three outcomes above, explicitly, before
+you move on — never silently drop it because it felt too small to matter.
+Silent-drop is exactly how small, correct observations rot into recurring
+technical debt no one ever circles back to: the finding was real, it was
+seen, and then it was forgotten because nothing forced a decision.
+
+Before closing out step 7 ("Fix to green, then land"), re-read the review's
+full findings list and confirm every single item — down to the last nit —
+has one of the three dispositions attached in the devlog entry you're about
+to write. A devlog entry that only narrates the fixes and stays silent about
+the nits is incomplete; write the nits' dispositions too, even when the
+disposition is "rejected, here's why" or "deferred, tracked at ROADMAP item
+X." This is a standing rule, not a per-project judgment call.
